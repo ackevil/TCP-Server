@@ -9,6 +9,7 @@
 #define TCPSERVER_H_
 #include <string>
 #include <netinet/in.h>
+#include "threadPool.h"
 using namespace std;
 class TcpServer{
 	public:
@@ -36,7 +37,8 @@ class TcpServer{
 		sockaddr_in clientAddr;
 		int epollfd;
 		int nepollEvent;
-
+		/**threadPool**/
+		ThreadPool pool;
 };
 
 
