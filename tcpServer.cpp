@@ -87,6 +87,7 @@ int TcpServer::run(){
 }
 void TcpServer::initConf(){
 	nepollEvent=100;
+	initThreadPool();
 }
 void TcpServer::doEpoll(){
 	struct epoll_event events[nepollEvent];
@@ -101,13 +102,34 @@ void TcpServer::doEpoll(){
 			if(fd==sockfd&&(events[i].events&EPOLLIN)){
 				handleAccept(epollfd,sockfd);
 			}else if(events[i].events&EPOLLIN){
-				doRead(epollfd,events[i].data.fd);
+				arginfo* arg=(arginfo*)malloc(sizeof(arginfo));
+				arg->epollfd=epollfd;
+				arg->fd=events[i].data.fd;
+				arg->flag=0;  //0 read
+				addWorkerQueueNode(process,(void*)(arg));
+				//doRead(epollfd,events[i].data.fd);
 			}else if (events[i].events & EPOLLOUT){
-				doWrite(epollfd,events[i].data.fd);
+				arginfo* arg=(arginfo*)malloc(sizeof(arginfo));
+								arg->epollfd=epollfd;
+								arg->fd=events[i].data.fd;
+								arg->flag=1;  //1 write
+					addWorkerQueueNode(process,(void*)(arg));
+			//	doWrite(epollfd,events[i].data.fd);
 			}
 		}
 	}
 
+}
+void* TcpServer::process(void *arg){
+	int epollfd=((arginfo*)arg)->epollfd;
+	int fd=((arginfo*)arg)->fd;
+	int flag=((arginfo*)arg)->flag;
+	if(flag==0){
+		doRead(epollfd,fd);
+	}else{
+		doWrite(epollfd,fd);
+	}
+	return (void*)0;
 }
 void TcpServer::doWrite(int epollfd,int sockfd){
 	const char* buf="HTTP/1.1 200 OK\r\nContent-Type:text/html; charset=UTF-8\r\n\r\nHello World";

@@ -11,6 +11,12 @@
 #include <netinet/in.h>
 #include "threadPool.h"
 using namespace std;
+
+typedef struct {
+	int epollfd;
+	int fd;
+	int flag;
+}arginfo;
 class TcpServer{
 	public:
 		TcpServer();
@@ -20,13 +26,14 @@ class TcpServer{
 		int initSocket();
 		int handleRequest();
 		void doEpoll();
-		void addEvent(int epollfd,int sockfd,int state);
-		void modifyEvent(int epollfd,int sockfd,int state);
-		void delEvent(int epollfd,int sockfd,int state);
-		void handleAccept(int epollfd,int sockfd);
-		void doRead(int epollfd,int sockfd);
-		void doWrite(int epollfd,int sockfd);
-		void setNonBlock(int sockfd);
+		static void addEvent(int epollfd,int sockfd,int state);
+		static void modifyEvent(int epollfd,int sockfd,int state);
+		static void delEvent(int epollfd,int sockfd,int state);
+		static void handleAccept(int epollfd,int sockfd);
+		static void* process(void *arg);
+		static void doRead(int epollfd,int sockfd);
+		static void doWrite(int epollfd,int sockfd);
+		static void setNonBlock(int sockfd);
 
 	private:
 		string ip;
@@ -38,7 +45,6 @@ class TcpServer{
 		int epollfd;
 		int nepollEvent;
 		/**threadPool**/
-		ThreadPool pool;
 };
 
 
